@@ -67,7 +67,7 @@ impl Shell {
         let mut argv: ~[~str] =
             cmd_line.split(' ').filter_map(|x| if x != "" { Some(x.to_owned()) } else { None }).to_owned_vec();
     
-        if argv.len() > 0 {
+        if argv.len() > 1 {
             let cwd: Path = os::getcwd(); 
             let newdir: ~str = argv.remove(1);
             let newpath: Path = from_str(newdir).unwrap(); 
