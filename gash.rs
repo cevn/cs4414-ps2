@@ -18,12 +18,14 @@ use extra::getopts;
 
 struct Shell {
     cmd_prompt: ~str,
+    history: ~[~str],
 }
 
 impl Shell {
     fn new(prompt_str: &str) -> Shell {
         Shell {
             cmd_prompt: prompt_str.to_owned(),
+            history: ~[],
         }
     }
     
@@ -36,12 +38,17 @@ impl Shell {
             
             let line = stdin.read_line().unwrap();
             let cmd_line = line.trim().to_owned();
+            self.history.push(cmd_line.clone()); 
             let program = cmd_line.splitn(' ', 1).nth(0).expect("no program");
             
             match program {
-                ""      =>  { continue; }
-                "exit"  =>  { return; }
-                _       =>  { self.run_cmdline(cmd_line); }
+                ""        =>  { continue; }
+                "exit"    =>  { return; }
+                "cd"      =>  { self.cd(cmd_line); } 
+                "history" =>  { for line in self.history.iter() {
+                                    println!("{}", *line);  
+                                }} 
+                _         =>  { self.run_cmdline(cmd_line); }
             }
         }
     }
@@ -55,6 +62,21 @@ impl Shell {
             self.run_cmd(program, argv);
         }
     }
+
+    fn cd(&mut self, cmd_line: &str) { 
+        let mut argv: ~[~str] =
+            cmd_line.split(' ').filter_map(|x| if x != "" { Some(x.to_owned()) } else { None }).to_owned_vec();
+    
+        if argv.len() > 0 {
+            let cwd: Path = os::getcwd(); 
+            let newdir: ~str = argv.remove(1);
+            let newpath: Path = from_str(newdir).unwrap(); 
+
+            println(format!("{}", newdir.clone()));
+
+            os::change_dir(&cwd.join(newpath)); 
+        }
+    } 
     
     fn run_cmd(&mut self, program: &str, argv: &[~str]) {
         if self.cmd_exists(program) {
